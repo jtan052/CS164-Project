@@ -11,7 +11,14 @@ def receiveThread(s):
 	while True:
 		try:
 			reply = s.recv(4096)  # receive msg from server
-
+			reply = stringToTuple(reply)
+			if reply[0] == 'broadcast':
+				print reply[1]
+			elif reply[0] == username:
+				print reply[1]
+			elif reply[0] == 'gmsg':
+				for msg in reply[1:]:
+					print msg
 			# You can add operations below once you receive msg
 			# from the server
 
@@ -89,7 +96,7 @@ if reply == 'valid': # TODO: use the correct string to replace xxx here!
 	while True :
 
 		# TODO: Part-1.4: User should be provided with a menu. Complete the missing options in the menu!
-		message = raw_input("Choose an option (type the number): \n 1. Logout \n 2. Post a message \n 3. Change Password \n")
+		message = raw_input("Choose an option (type the number): \n 1. Logout \n 2. Post a message \n 3. Join or Quit a group \n 4. Read unread messages \n 5. Change Password \n")
 		
 		try :
 			# TODO: Send the selected option to the server
@@ -101,13 +108,107 @@ if reply == 'valid': # TODO: use the correct string to replace xxx here!
 				s.close()
 				sys.exit()
 				# TODO: add logout operation
-			if message == str(2):
-				print 'Post message'
+			elif message == str(2):
+				print 'message'
 				s.sendall('2')
-			# Add other operations, e.g. change password
-			if message == str(3):
-				print 'Change password'
+				while True:
+					message = raw_input("Choose an option (type the number): \n 1. Private messages \n 2. Broadcast messages \n 3. Group messages \n")
+					try :
+						'''
+						Part-2: Send option to server
+						'''
+						if message == str(1):
+							pmsg = raw_input("Enter your private message\n")
+							try :
+								s.sendall('1')
+								s.sendall(pmsg)
+							except socket.error:
+								print 'Private Message Send failed'
+								sys.exit()
+							rcv_id = raw_input("Enter the recevier ID:\n")
+							try :
+								s.sendall(rcv_id)
+								break
+							except socket.error:
+								print 'rcv_id Send failed'
+								sys.exit()
+						if message == str(2):
+							bmsg = raw_input("Enter your broadcast message\n")
+							try :
+								s.sendall('2')
+								s.sendall(bmsg)
+								'''
+								Part-2: Send broadcast message
+								'''
+								break
+							except socket.error:
+								print 'Broadcast Message Send failed'
+								sys.exit()
+						if message == str(3):
+							gmsg = raw_input("Enter your group message\n")
+							try :
+								s.sendall('3')
+								s.sendall(gmsg)
+							except socket.error:
+								print 'Group Message Send failed'
+								sys.exit()
+							g_id = raw_input("Enter the Group ID:\n")
+							try :
+								s.sendall(g_id)
+								break
+							except socket.error:
+								print 'g_id Send failed'
+								sys.exit()
+					except socket.error:
+						print 'Message Send failed'
+						sys.exit() 
+			elif message == str(3):
 				s.sendall('3')
+				option = raw_input("Do you want to: 1. Join Group 2. Quit Group: \n")
+				if option == str(1):
+					s.sendall('1')
+					group = raw_input("Enter the Group you want to join: ")
+					try :
+						s.sendall(group)
+					except socket.error:
+						print 'group info sent failed'
+						sys.exit()
+				elif option == str(2):
+					s.sendall('2')
+					group = raw_input("Enter the Group you want to quit: ")
+					try :
+						s.sendall(group)
+					except socket.error:
+						print 'group info sent failed'
+						sys.exit()
+				else:
+					print 'Option not valid'
+			
+			elif message == str(4):
+				s.sendall('4')
+				while not os.getpgrp() == os.tcgetpgrp(sys.stdout.fileno()):
+					pass
+				option = raw_input("Do you want to: 1. View all offline messages; 2. View only from a particular Group\n")
+				if option == str(1):					
+					try :
+						s.sendall('1')
+					except socket.error:
+						print 'msg Send failed'
+						sys.exit()
+				elif option == str(2):
+					s.sendall('2')
+					group = raw_input("Enter the group you want to view the messages from: ")
+					try :
+						s.sendall(group)		
+					except socket.error:
+						print 'group Send failed'
+						sys.exit()
+				else:
+					print 'Option not valid'
+			# Add other operations, e.g. change password
+			elif message == str(5):
+				print 'Change password'
+				s.sendall('5')
 				#send over the old password for verification
 				password = getpass.getpass(prompt='Old Password:')
 				s.send(password,port)

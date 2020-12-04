@@ -51,7 +51,10 @@ message queue for each user
 clients = []
 # TODO: Part-1 : create a var to store username && password. NOTE: A set of username/password pairs are hardcoded here. 
 userpass = [['Jacob','Tan'],['Haley','Lorenz'],['Grace','Tran']]
+online = [0,0,0]
 messages = [[],[],[]]
+groups = [[],[],[]]
+groupmsgs = [[],[],[]]
 unread = [0,0,0]
 count = 0
 
@@ -61,13 +64,13 @@ Function for handling connections. This will be used to create threads
 def clientThread(conn):
 	global clients
 	global count
-	# Tips: Sending message to connected client
+	# Tips: Sending message to connected ient
 	#conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
 	rcv_msg = conn.recv(1024)
 	rcv_msg = stringToTuple(rcv_msg)
 	if rcv_msg in userpass:
 		user = userpass.index(rcv_msg)
-		
+		online[user] = 1
 		try :
 			conn.sendall('valid')
 		except socket.error:
@@ -83,11 +86,67 @@ def clientThread(conn):
 			if option == str(1):
 				print 'user logout'
 				# TODO: Part-1: Add the logout processing here
+				online[user] = 0
 				conn.close()	
 			elif option == str(2):
-				print 'Post a message'
+				print 'Sending Message'
+				message = conn.recv(1024)
+				if message == str(1):
+					print 'Private Message Case'
+					pmsg = conn.recv(1024)
+					rcv_id = conn.recv(1024)
+					if online[int(rcv_id)] == 1: #then the user is online
+						for x in clients:
+							x.sendall(userpass[int(rcv_id)][0] + "<>"  +  pmsg)
+					else:
+						messages[int(rcv_id)].append(pmsg)
+						print messages[int(rcv_id)][0]
+					print 'end of private message case'
+				if message == str(2):
+					print 'Broadcast Message Case'
+					bmsg = conn.recv(1024)
+					for x in clients:
+						x.sendall("broadcast" + "<>" + bmsg)
+					print 'end of broadcast message case'
+				if message == str(3):
+					print 'Send Group Message Case'
+					gmsg = conn.recv(1024)
+					g_id = conn.recv(1024)
+					groupmsgs[int(g_id)].append(gmsg)
+					print groupmsgs[int(g_id)][0]
+					print 'end of groupmsg case'
+
 
 			elif option == str(3):
+				print 'Join/Quit group'
+				message = conn.recv(1024)
+				if message == str(1):
+					group = conn.recv(1024)
+					groups[int(group)].append(user)
+					for x in groups[int(group)]:
+						print type(x)
+						print groups[int(group)][x]
+				if message == str(2):
+					group = conn.recv(1024)
+					groups[int(group)].remove(user)
+					for x in groups[int(group)]:
+						print groups[int(group)][x]
+			elif option == str(4):
+				print 'View Unread Messages'
+				option = conn.recv(1024)
+				if option == str(1):
+					for x in messages[user]:
+						print messages[user][x] + '\n'
+				if option == str(2):
+					g_id = conn.recv(1024)
+					#print 'g_id:' +  g_id
+					msgnum = 1
+					sendbuffer = 'gmsg'
+					for msgs in groupmsgs[int(g_id)]:
+						sendbuffer += "<>" + str(msgnum) + ": " + msgs
+						msgnum = msgnum + 1
+					conn.sendall(sendbuffer)
+			elif option == str(5):
 				print 'Change password'
 				#conn.sendall('Server Requests Old Password\n')
 				option = conn.recv(1024)
@@ -101,11 +160,7 @@ def clientThread(conn):
 				else:
 					#conn.sendall('invalid')
 					print 'Old Password Invalid, login info not updated'
-			elif option == str(4):
-				print 'View Count of Unread Messages'
-				print unread[user] + 'unread messages'	
-
-
+			
 			else:
 				try :
 					conn.sendall('Option not valid')
