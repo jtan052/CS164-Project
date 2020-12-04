@@ -17,6 +17,15 @@ def receiveThread(s):
 			elif reply[0] == username:
 				print reply[1]
 			elif reply[0] == 'gmsg':
+				print 'Group Messages:'
+				for msg in reply[1:]:
+					print msg
+			elif reply[0] == 'pmsg':
+				print 'Unread Messages:'
+				for msg in reply[1:]:
+					print msg
+			elif reply[0] == 'groups':
+				print 'List of Groups:'
 				for msg in reply[1:]:
 					print msg
 			# You can add operations below once you receive msg
@@ -96,7 +105,7 @@ if reply == 'valid': # TODO: use the correct string to replace xxx here!
 	while True :
 
 		# TODO: Part-1.4: User should be provided with a menu. Complete the missing options in the menu!
-		message = raw_input("Choose an option (type the number): \n 1. Logout \n 2. Post a message \n 3. Join or Quit a group \n 4. Read unread messages \n 5. Change Password \n")
+		message = raw_input("Choose an option (type the number): \n 1. Logout \n 2. Post a message \n 3. Join, Quit or Find  a group \n 4. Read unread messages \n 5. Change Password \n")
 		
 		try :
 			# TODO: Send the selected option to the server
@@ -164,7 +173,7 @@ if reply == 'valid': # TODO: use the correct string to replace xxx here!
 						sys.exit() 
 			elif message == str(3):
 				s.sendall('3')
-				option = raw_input("Do you want to: 1. Join Group 2. Quit Group: \n")
+				option = raw_input("Do you want to: \n 1. Join Group \n 2. Quit Group \n 3. List groups. \n")
 				if option == str(1):
 					s.sendall('1')
 					group = raw_input("Enter the Group you want to join: ")
@@ -181,6 +190,8 @@ if reply == 'valid': # TODO: use the correct string to replace xxx here!
 					except socket.error:
 						print 'group info sent failed'
 						sys.exit()
+				elif option == str(3):
+					s.sendall('3')
 				else:
 					print 'Option not valid'
 			

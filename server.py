@@ -53,7 +53,7 @@ clients = []
 userpass = [['Jacob','Tan'],['Haley','Lorenz'],['Grace','Tran']]
 online = [0,0,0]
 messages = [[],[],[]]
-groups = [[],[],[]]
+groups = [[0,1],[1,2],[2,0]]
 groupmsgs = [[],[],[]]
 unread = [0,0,0]
 count = 0
@@ -131,12 +131,25 @@ def clientThread(conn):
 					groups[int(group)].remove(user)
 					for x in groups[int(group)]:
 						print groups[int(group)][x]
+				if message == str(3):
+					sendbuffer = 'groups'
+					groupnum = 0
+					for group in groups:
+						sendbuffer += "<>" + "Group" + str(groupnum) + ": "
+						for member in group:
+							sendbuffer += userpass[member][0] + " "
+						groupnum += 1
+					conn.sendall(sendbuffer)
 			elif option == str(4):
 				print 'View Unread Messages'
 				option = conn.recv(1024)
 				if option == str(1):
-					for x in messages[user]:
-						print messages[user][x] + '\n'
+					msgnum = 1
+					sendbuffer = 'pmsg'
+					for msgs in messages[user]:
+						sendbuffer += "<>" + str(msgnum) + ": " +msgs
+						msgnum = msgnum + 1
+					conn.sendall(sendbuffer)
 				if option == str(2):
 					g_id = conn.recv(1024)
 					#print 'g_id:' +  g_id
