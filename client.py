@@ -60,7 +60,7 @@ print 'Socket Created'
 '''
 Resolve Hostname
 '''
-host = 'localhost'
+host = '10.0.0.4'
 port = 9486
 try:
 	remote_ip = socket.gethostbyname(host)
